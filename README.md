@@ -1,6 +1,8 @@
+# MCP Proxy MVP Specification
+
 ## Requirements
-- Add the ability to make MCP calls for external LLM providers
-- Run PII checks
+- Add the ability to make MCP calls for OpenAI models
+- Run PII checks for the data provided to LLM
 - Ask the user for access to share sensitive information with LLM
 - No authentication mechanism is required
 - No metrics are required
@@ -48,7 +50,7 @@ sequenceDiagram
     Proxy ->> User: send final response
 ```
 
-In the case if user don't want to share sensitive information the entire dialog will be stopped:
+In the case if the user doesn't want to share sensitive information, the entire dialog will be stopped:
 
 ```mermaid
 sequenceDiagram
@@ -77,6 +79,7 @@ The project will be built using Scala + ZIO stack
 * Data about available MCP servers will be provided to model using [Function Calling](https://platform.openai.com/docs/guides/function-calling)
 * _Tools_ feature is supported in the [official Java SDK](https://github.com/openai/openai-java) which is going to be used for interactions with the model
 * [Official MCP Java SDK](https://github.com/modelcontextprotocol/java-sdk) will be used for communications with MCP server
+* If the data retrieved from MCP servers is out of the context window, the app will returnan  error to the user and stop dialog
 
 ### PII module
 * PII check will be based on regex and encapsulated for future extensions
