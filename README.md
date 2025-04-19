@@ -21,6 +21,7 @@
 - PII detection supports EN language only
 - If sensitive data is found, it will not be provided to users for direct verification. \
   Users will only know that the data is sensitive, and they can either grant LLM access or deny it
+- If the data retrieved from the MCP servers is out of the context window, the app will return an error to the user and stop the dialog
 
 **Full Sequence Diagram for success path**
 ```mermaid
@@ -71,6 +72,7 @@ The project will be built using Scala + ZIO stack
 
 ### Error Handling
 * Return 400 HTTP code in the case of an invalid user's input
+* Return 413 HTTP code if the data retrieved from the MCP servers is more than the context window
 * Return 502 HTTP code in case the MCP or LLM servers have not responded
 * Return 500 HTTP  code to a user in the case of any other error
 * Log to the console for investigation purposes
