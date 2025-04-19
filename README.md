@@ -81,7 +81,6 @@ The project will be built using Scala + ZIO stack
 * Data about available MCP servers will be provided to model using [Function Calling](https://platform.openai.com/docs/guides/function-calling)
 * _Tools_ feature is supported in the [official Java SDK](https://github.com/openai/openai-java) which is going to be used for interactions with the model
 * [Official MCP Java SDK](https://github.com/modelcontextprotocol/java-sdk) will be used for communications with MCP server
-* If the data retrieved from MCP servers is out of the context window, the app will returnan  error to the user and stop dialog
 
 ### PII module
 * PII check will be based on regex and encapsulated for future extensions
