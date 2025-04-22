@@ -9,8 +9,9 @@ object VersionOf {
   val `zio-config` = "4.0.4"
   val `zio-schema` = "1.6.6"
   val `zio-test` = "2.1.17"
-
+  val `mcp-sdk` = "0.9.0"
 }
+
 object ZIO {
   val zioCore = "dev.zio" %% "zio" % VersionOf.zio
   val zioJson = "dev.zio" %% "zio-json" % VersionOf.`zio-json`
@@ -47,4 +48,8 @@ object Testing {
     "dev.zio" %% "zio-test-magnolia" % VersionOf.`zio-test` % Test
 
   val all: Seq[ModuleID] = Seq(zioTest, zioTestSbt, zioTestMagnolia)
+}
+
+object MCP {
+  val mcpSdk = "io.modelcontextprotocol.sdk" % "mcp" % VersionOf.`mcp-sdk`
 }

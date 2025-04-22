@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
     name := "zio-llm-proxy"
   )
   .settings(
-    libraryDependencies ++= ZIO.all ++ Logging.all ++ Testing.all
+    libraryDependencies ++= ZIO.all ++ Logging.all ++ Testing.all :+ MCP.mcpSdk
   )
   .settings(
     assembly / assemblyMergeStrategy := (_ => MergeStrategy.first)
