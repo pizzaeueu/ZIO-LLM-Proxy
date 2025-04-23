@@ -53,3 +53,7 @@ object Testing {
 object MCP {
   val mcpSdk = "io.modelcontextprotocol.sdk" % "mcp" % VersionOf.`mcp-sdk`
 }
+
+object OpenAI {
+  val sdk = "com.openai" % "openai-java" % "1.4.1"
+}

@@ -14,7 +14,7 @@ object Main extends ZIOAppDefault {
     ZIO
       .serviceWithZIO[ProxyMCPClient](_.listTools)
       .provide(ProxyMCPClientLive.live)
-      .flatMap(tools => ZIO.log(tools)) *>
+      .flatMap(tools => ZIO.log(tools.toString)) *>
       ZIO
         .config[AppConfig]
         .tap(config => ZIO.log(s"Config: $config"))

@@ -1,19 +1,17 @@
 package com.github.pizzaeueu.mcp
 
-import io.modelcontextprotocol.client.transport.{
-  ServerParameters,
-  StdioClientTransport
-}
+import io.modelcontextprotocol.client.transport.{ServerParameters, StdioClientTransport}
 import io.modelcontextprotocol.client.{McpClient, McpSyncClient}
+import io.modelcontextprotocol.spec.McpSchema.ListToolsResult
 import zio.*
 
 import java.nio.file.Paths
 
 trait ProxyMCPClient:
-  def listTools: Task[String]
+  def listTools: Task[ListToolsResult]
 
 final case class ProxyMCPClientLive(client: McpSyncClient) extends ProxyMCPClient:
-  override def listTools: Task[String] = ZIO.succeed(client.listTools().toString)
+  override def listTools: Task[ListToolsResult] = ZIO.succeed(client.listTools())
 
 //TODO: Rewrite asap
 object ProxyMCPClientLive {
