@@ -29,7 +29,7 @@ final case class ProxyRoutesLive(userRequestService: UserRequestService)
                 .map(err => new RuntimeException(err))
             )
             modelResponse <- userRequestService.ask(userPrompt.text)
-            _ <- channel.send(Read(WebSocketFrame.Text(modelResponse)))
+            _ <- channel.send(Read(WebSocketFrame.Text(modelResponse.toString)))
           } yield ()).catchAll(err =>
             ZIO.logError(err.getMessage) *> channel.send(
               (Read(WebSocketFrame.Text(err.getMessage)))
