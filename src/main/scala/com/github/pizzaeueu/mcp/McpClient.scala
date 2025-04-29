@@ -6,11 +6,16 @@ import io.modelcontextprotocol.client.transport.{
   StdioClientTransport
 }
 import io.modelcontextprotocol.client.{McpClient, McpSyncClient}
-import io.modelcontextprotocol.spec.McpSchema.ListToolsResult
+import io.modelcontextprotocol.spec.McpSchema
+import io.modelcontextprotocol.spec.McpSchema.{CallToolRequest, ListToolsResult}
 import zio.*
+
+import scala.jdk.CollectionConverters.*
 
 trait ProxyMCPClient:
   def listTools: Task[List[ListToolsResult]]
+
+  def getTextResult(callTools: List[CallToolRequest]): Task[List[String]]
 
 final case class ProxyMCPClientLive(
     clients: List[McpSyncClient],
@@ -20,6 +25,24 @@ final case class ProxyMCPClientLive(
     ZIO.collectAllPar {
       clients.map(c => ZIO.succeed(c.listTools()))
     }
+
+  def getTextResult(callTools: List[CallToolRequest]): Task[List[String]] =
+    for {
+      callTools <- ZIO.succeed {
+        callTools
+          .map { callTool => clients.head.callTool(callTool) }
+      } // todo: run on proper client
+      toolResult = callTools.flatMap(_.content().asScala)
+      _ = println(s"toolResult = $toolResult")
+      textResult <- ZIO.foreach(toolResult) {
+        case content: McpSchema.TextContent =>
+          ZIO.succeed(content.text())
+        case content =>
+          ZIO
+            .logError(s"Unsupported MCP content type - ${content.`type`()}")
+            .as("")
+      }
+    } yield textResult
 
 object ProxyMCPClientLive {
   def live: ZLayer[List[MCPConfig], Nothing, ProxyMCPClient] = ZLayer.scoped {
