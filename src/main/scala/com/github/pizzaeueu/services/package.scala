@@ -7,19 +7,22 @@ import com.openai.models.chat.completions.{
   ChatCompletionTool
 }
 import com.openai.models.{FunctionDefinition, FunctionParameters}
-import io.modelcontextprotocol.spec.McpSchema.{CallToolRequest, ListToolsResult}
+import io.modelcontextprotocol.spec.McpSchema.CallToolRequest
 import zio.{Task, ZIO}
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.pizzaeueu.domain.llm.LLMTool
+import com.github.pizzaeueu.domain.mcp.{McpRequest, McpTools}
+
 import scala.jdk.CollectionConverters.*
 
 package object services {
   private val mapper = new ObjectMapper()
 
   def mcpToolToOpenAiTool(
-      mcpTools: List[ListToolsResult]
-  ): Task[List[ChatCompletionTool]] = ZIO.succeed {
-    mcpTools.flatMap { tool =>
-      tool
+      mcpTools: List[McpTools]
+  ): Task[List[LLMTool]] = ZIO.succeed {
+    mcpTools.flatMap { t =>
+      t.tool
         .tools()
         .asScala
         .map { tool =>
@@ -45,7 +48,10 @@ package object services {
             .parameters(params)
             .build()
 
-          ChatCompletionTool.builder().function(function).build()
+          LLMTool(
+            t.clientId,
+            ChatCompletionTool.builder().function(function).build()
+          )
         }
         .toList
     }
@@ -53,18 +59,18 @@ package object services {
 
   def openAIToolToMcpTool(
       toolCalls: List[ChatCompletionMessageToolCall]
-  ): Task[List[CallToolRequest]] = ZIO.attempt {
+  ): Task[List[McpRequest]] = ZIO.attempt {
     toolCalls.map { toolCall =>
       val toolName = toolCall.function().name()
       val argumentsJson = toolCall.function().arguments()
 
-      val argumentsMap: java.util.Map[String, Object] =
+      val argumentsMap: java.util.Map[String, Object] = {
         mapper.readValue(
           argumentsJson,
           classOf[java.util.HashMap[String, Object]]
         )
-
-      CallToolRequest(toolName, argumentsMap)
+      }
+      McpRequest(CallToolRequest(toolName, argumentsMap))
     }
   }
 }
