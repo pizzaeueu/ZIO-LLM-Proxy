@@ -2,12 +2,13 @@ package com.github.pizzaeueu.services
 
 import com.github.pizzaeueu.config.OpenAIConfig
 import com.github.pizzaeueu.domain.*
-import com.github.pizzaeueu.domain.LLMResponse.Success
-import com.github.pizzaeueu.domain.llm.LLMTool
+import com.github.pizzaeueu.domain.RequestState.WaitingForApprove
+import com.github.pizzaeueu.domain.llm.LLMResponse.Success
+import com.github.pizzaeueu.domain.llm.{Dialogue, LLMResponse, LLMTool}
 import com.github.pizzaeueu.domain.mcp.McpResponseString
 import com.github.pizzaeueu.llm.LLMClient
 import com.github.pizzaeueu.mcp.ProxyMCPClient
-import com.github.pizzaeueu.pii.PIIChecker
+import com.github.pizzaeueu.repository.ClientStateRepository
 import com.openai.models.chat.completions.*
 import zio.{Task, ZIO, ZLayer}
 
@@ -15,32 +16,30 @@ import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.RichOptional
 
 trait UserRequestService {
-  def ask(prompt: String): Task[LLMResponse]
+  def ask(
+      dialogue: Dialogue
+  ): Task[LLMResponse]
 }
 
 final case class UserRequestServiceLive(
     llmClient: LLMClient,
     mcpClient: ProxyMCPClient,
-    piiChecker: PIIChecker,
+    stateRepository: ClientStateRepository,
     config: OpenAIConfig
 ) extends UserRequestService:
-  override def ask(prompt: String): Task[LLMResponse] = {
+  override def ask(
+      dialogue: Dialogue
+  ): Task[LLMResponse] = {
     for {
       tools <- mcpClient.listTools.flatMap(mcpToolToOpenAiTool)
-      userRequest = ChatCompletionMessageParam.ofUser(
-        ChatCompletionUserMessageParam
-          .builder()
-          .content(prompt)
-          .build()
-      )
-      modelResponse <- llmClient.sendRequest(List(userRequest), tools)
-      res <- askModelUntilItIsReady(modelResponse, List(userRequest), tools)
+      modelResponse <- llmClient.sendRequest(dialogue, tools)
+      res <- askModelUntilItIsReady(modelResponse, dialogue, tools)
     } yield res
   }
 
   private def askModelUntilItIsReady(
       modelResponse: ChatCompletion,
-      dialog: List[ChatCompletionMessageParam],
+      previousDialogue: Dialogue,
       tools: List[LLMTool]
   ): Task[LLMResponse] = {
     ZIO.ifZIO(
@@ -49,30 +48,36 @@ final case class UserRequestServiceLive(
       )
     )(
       loadMcpData(modelResponse).flatMap {
-        case mcpData if mcpData.exists(_.isSensitive) =>
-          ZIO.succeed(LLMResponse.SensitiveDataFound)
+        case mcpData
+            if mcpData.exists(_.isSensitive) && previousDialogue.secure =>
+          stateRepository.saveState(
+            previousDialogue.id,
+            WaitingForApprove(previousDialogue)
+          ) *> ZIO.succeed(LLMResponse.SensitiveDataFound)
         case mcpData =>
           val toolsCalledByLLM = toolsCalledByLLMUnsafe(modelResponse)
-          val fullDialog = List(
-            ChatCompletionMessageParam.ofAssistant(
-              ChatCompletionAssistantMessageParam
-                .builder()
-                .toolCalls(toolsCalledByLLM.asJava)
-                .build()
-            ),
-            ChatCompletionMessageParam.ofTool(
-              ChatCompletionToolMessageParam
-                .builder()
-                .content(mcpData.map(_.response).mkString("\n"))
-                .toolCallId(
-                  toolsCalledByLLM.head.id()
-                ) // TODO: proper tools support
-                .build()
+          val fullDialog = previousDialogue.copy(data =
+            previousDialogue.data ++ List(
+              ChatCompletionMessageParam.ofAssistant(
+                ChatCompletionAssistantMessageParam
+                  .builder()
+                  .toolCalls(toolsCalledByLLM.asJava)
+                  .build()
+              ),
+              ChatCompletionMessageParam.ofTool(
+                ChatCompletionToolMessageParam
+                  .builder()
+                  .content(mcpData.map(_.response).mkString("\n"))
+                  .toolCallId(
+                    toolsCalledByLLM.head.id()
+                  ) // TODO: proper tools support
+                  .build()
+              )
             )
-          ) ++ dialog
+          )
           for {
             llmResponse <- llmClient.sendRequest(fullDialog, tools)
-            res <- askModelUntilItIsReady(llmResponse, dialog, tools)
+            res <- askModelUntilItIsReady(llmResponse, fullDialog, tools)
           } yield res
       },
       getModelResponseAsText(modelResponse).map(Success.apply)

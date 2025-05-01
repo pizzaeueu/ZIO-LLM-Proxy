@@ -6,6 +6,7 @@ import com.github.pizzaeueu.http.server.{HttpServer, HttpServerLive}
 import com.github.pizzaeueu.llm.{LLMClient, LLMClientLive}
 import com.github.pizzaeueu.mcp.{ProxyMCPClient, ProxyMCPClientLive}
 import com.github.pizzaeueu.pii.PIICheckerLive
+import com.github.pizzaeueu.repository.ClientStateRepositoryLive
 import com.github.pizzaeueu.services.{UserRequestService, UserRequestServiceLive}
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
@@ -30,7 +31,8 @@ object Main extends ZIOAppDefault {
             ZLayer.succeed(config.mcp),
             UserRequestServiceLive.live,
             ProxyRoutesLive.live,
-            PIICheckerLive.live
+            PIICheckerLive.live,
+            ClientStateRepositoryLive.live
           )
       }
       .withConfigProvider(TypesafeConfigProvider.fromResourcePath())
