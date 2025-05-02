@@ -3,8 +3,6 @@ package com.github.pizzaeueu.domain
 import com.github.pizzaeueu.domain.llm.Dialogue
 
 enum RequestState {
-  case Started
+  case InProgress
   case WaitingForApprove(dialogue: Dialogue)
-  case Finished
-
 }

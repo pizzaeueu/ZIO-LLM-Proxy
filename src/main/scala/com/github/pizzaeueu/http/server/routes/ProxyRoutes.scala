@@ -1,15 +1,17 @@
 package com.github.pizzaeueu.http.server.routes
 
-import zio.http.*
-import com.github.pizzaeueu.http.server.HttpServerLive.ApiV1Path
-import zio.*
-import zio.json.*
+import com.github.pizzaeueu.domain
 import com.github.pizzaeueu.domain.*
 import com.github.pizzaeueu.domain.RequestState.*
 import com.github.pizzaeueu.domain.llm.{Dialogue, LLMResponse}
+import com.github.pizzaeueu.http.server.HttpServerLive.ApiV1Path
 import com.github.pizzaeueu.repository.ClientStateRepository
 import com.github.pizzaeueu.services.UserRequestService
+import zio.*
+import zio.http.*
 import zio.http.ChannelEvent.*
+import zio.json.*
+import zio.json.internal.Write
 
 trait ProxyRoutes:
   def build(): Routes[Any, Nothing]
@@ -18,23 +20,40 @@ final case class ProxyRoutesLive(
     userRequestService: UserRequestService,
     stateRepository: ClientStateRepository
 ) extends ProxyRoutes:
-  private implicit val userPromptDecoder: JsonDecoder[UserPrompt] =
+  private given JsonDecoder[UserPrompt] =
     DeriveJsonDecoder.gen[UserPrompt]
-  private implicit val UserAllowDecoder: JsonDecoder[UserAllow] =
+  private given JsonDecoder[UserAllow] =
     DeriveJsonDecoder.gen[UserAllow]
+
+  private given JsonEncoder[LLMResponse] =
+    (a: LLMResponse, indent: Option[RuntimeFlags], out: Write) =>
+      a match {
+        case domain.llm.LLMResponse.Success(text) =>
+          out.write(s"""{"type": "success", "text": "$text" + }""")
+        case domain.llm.LLMResponse.SensitiveDataFound =>
+          out.write(
+            s"""{"type": "sensitive-info", "text": "Please approve the request." + }"""
+          )
+      }
+
+  private given JsonEncoder[Throwable] =
+    (a: Throwable, indent: Option[RuntimeFlags], out: Write) =>
+      out.write(
+        s"""{"type": "error", "text": "${a.getMessage}" + }"""
+      )
 
   val socketApp: WebSocketApp[Any] =
     Handler.webSocket { channel =>
       for {
         clientId <- Random.nextUUID
-        _ <- stateRepository.saveState(clientId.toString, Started)
+        _ <- stateRepository.saveState(clientId.toString, InProgress)
         _ <- channel.receiveAll {
           case Read(WebSocketFrame.Text(text)) =>
             (for {
               stateMayBe <- stateRepository.getState(clientId.toString)
               state <- ZIO
                 .fromOption(stateMayBe)
-                .mapError(_ => new RuntimeException("State not found"))
+                .mapError(_ => StateNotFound)
               _ <- state match {
                 case RequestState.WaitingForApprove(dialogue) =>
                   for {
@@ -42,7 +61,7 @@ final case class ProxyRoutesLive(
                       text
                         .fromJson[UserAllow]
                         .left
-                        .map(err => new RuntimeException(err))
+                        .map(err => ParsingError(err))
                     )
                     _ <- {
                       if (userAllow.allow) {
@@ -52,13 +71,11 @@ final case class ProxyRoutesLive(
                           )
                           .flatMap(res =>
                             channel.send(
-                              Read(WebSocketFrame.Text(res.toString))
+                              Read(WebSocketFrame.Text(res.toJson))
                             )
                           )
                       } else {
-                        channel.send(
-                          Read(WebSocketFrame.Text("Connection is closed"))
-                        )
+                        channel.shutdown
                       }
                     }
                   } yield ()
@@ -68,30 +85,19 @@ final case class ProxyRoutesLive(
                       text
                         .fromJson[UserPrompt]
                         .left
-                        .map(err => new RuntimeException(err))
+                        .map(err => ParsingError(err))
                     )
                     modelResponse <- userRequestService.ask(
                       Dialogue.startSecure(clientId.toString, userPrompt)
                     )
-                    _ <- modelResponse match {
-                      case LLMResponse.Success(text) =>
-                        channel.send(
-                          Read(WebSocketFrame.Text(text))
-                        )
-                      case LLMResponse.SensitiveDataFound =>
-                        channel.send(
-                          Read(
-                            WebSocketFrame.Text(
-                              "Sensitive data found. Please approve the request."
-                            )
-                          )
-                        )
-                    }
+                    _ <- channel.send(
+                      Read(WebSocketFrame.Text(modelResponse.toJson))
+                    )
                   } yield ()
               }
             } yield ()).catchAll(err =>
               ZIO.logError(err.getMessage) *> channel.send(
-                Read(WebSocketFrame.Text(err.getMessage))
+                Read(WebSocketFrame.Text(err.toJson))
               )
             )
           case other =>

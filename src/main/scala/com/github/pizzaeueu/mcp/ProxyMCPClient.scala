@@ -1,12 +1,10 @@
 package com.github.pizzaeueu.mcp
 
 import com.github.pizzaeueu.config.MCPConfig
+import com.github.pizzaeueu.domain.{McpClientNotFound, SeveralMcpClientsFound}
 import com.github.pizzaeueu.domain.mcp.*
 import com.github.pizzaeueu.pii.PIIChecker
-import io.modelcontextprotocol.client.transport.{
-  ServerParameters,
-  StdioClientTransport
-}
+import io.modelcontextprotocol.client.transport.{ServerParameters, StdioClientTransport}
 import io.modelcontextprotocol.client.McpClient
 import io.modelcontextprotocol.spec.McpSchema
 import zio.*
@@ -51,12 +49,10 @@ final case class ProxyMCPClientLive(
     )
     res <-
       if (filteredTools.isEmpty) {
-        ZIO.fail(new RuntimeException(s"No MCP client found for tool $toolName"))
+        ZIO.fail(McpClientNotFound(toolName))
       } else if (filteredTools.size > 1) {
         ZIO.fail(
-          new RuntimeException(
-            s"Several MCP clients found for tool $toolName"
-          )
+          SeveralMcpClientsFound(toolName)
         )
       } else {
         ZIO.succeed(filteredTools.head.clientId)

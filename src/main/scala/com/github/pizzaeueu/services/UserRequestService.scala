@@ -107,7 +107,11 @@ final case class UserRequestServiceLive(
       .fromOption(
         modelResponse.choices().get(0).message().content().toScala
       )
-      .mapError(_ => new RuntimeException("Unsupported model response"))
+      .mapError(_ =>
+        UnsupportedModelResponse(
+          modelResponse.choices().get(0).message().content().toScala.toString
+        )
+      )
 
   private def isToolCalled(modelResponse: ChatCompletion) = modelResponse
     .choices()
