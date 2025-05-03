@@ -1,3 +1,7 @@
+# Project Description
+The proxy enables integration between OpenAI chat models and local MCP servers via [Function Calling](https://platform.openai.com/docs/guides/function-calling), allowing 
+custom PII checks for sensitive data verification
+
 # MCP Proxy MVP Specification
 
 ## Requirements
