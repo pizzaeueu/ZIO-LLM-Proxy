@@ -24,3 +24,7 @@ case class ParsingError(message: String) extends Error {
 case class UnsupportedModelResponse(response: String) extends Error {
   override def getMessage: String = s"Unsupported Response from Model: $response"
 }
+
+case class DialogueIsTooLarge(maxToken: Int, usedToken: Int) extends Error {
+  override def getMessage: String = s"Dialogue is too large. Max Tokens: $maxToken, Used Tokens: $usedToken"
+}

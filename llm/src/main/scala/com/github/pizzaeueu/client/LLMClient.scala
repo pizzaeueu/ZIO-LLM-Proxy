@@ -2,6 +2,7 @@ package com.github.pizzaeueu.client
 
 import com.github.pizzaeueu.config.OpenAIConfig
 import com.github.pizzaeueu.domain.{Dialogue, LLMTool}
+import com.github.pizzaeueu.service.TokenValidator
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.models.chat.completions.*
 import zio.{Task, ZIO, ZLayer}
@@ -26,10 +27,11 @@ final case class LLMClientLive(config: OpenAIConfig) extends LLMClient:
   override def sendRequest(
       dialogue: Dialogue,
       tools: List[LLMTool]
-  ): Task[ChatCompletion] = ZIO.attempt {
+  ): Task[ChatCompletion] = ZIO.fromEither(TokenValidator.validate(dialogue, config.model)) *>
+    ZIO.attempt {
     val chat = ChatCompletionCreateParams
       .builder()
-      .model(config.model)
+      .model(config.model.toString)
       .messages(dialogue.data.asJava)
       .tools(tools.map(_.tool).asJava)
       .build()

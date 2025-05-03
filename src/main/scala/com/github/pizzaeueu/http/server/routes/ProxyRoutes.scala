@@ -70,6 +70,9 @@ final case class ProxyRoutesLive(
                             channel.send(
                               Read(WebSocketFrame.Text(res.toJson))
                             )
+                          ) <* stateRepository.saveState(
+                            clientId.toString,
+                            InProgress
                           )
                       } else {
                         channel.shutdown
