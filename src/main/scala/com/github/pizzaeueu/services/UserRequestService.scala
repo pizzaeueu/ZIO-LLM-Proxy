@@ -1,14 +1,10 @@
 package com.github.pizzaeueu.services
 
+import com.github.pizzaeueu.client.{LLMClient, ProxyMCPClient}
 import com.github.pizzaeueu.config.OpenAIConfig
 import com.github.pizzaeueu.domain.*
 import com.github.pizzaeueu.domain.RequestState.WaitingForApprove
-import com.github.pizzaeueu.domain.llm.LLMResponse.Success
-import com.github.pizzaeueu.domain.llm.{Dialogue, LLMResponse, LLMTool}
-import com.github.pizzaeueu.domain.mcp.McpResponseString
-import com.github.pizzaeueu.llm.LLMClient
-import com.github.pizzaeueu.mcp.ProxyMCPClient
-import com.github.pizzaeueu.repository.ClientStateRepository
+import com.github.pizzaeueu.domain.LLMResponse.Success
 import com.openai.models.chat.completions.*
 import zio.{Task, ZIO, ZLayer}
 

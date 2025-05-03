@@ -1,4 +1,4 @@
-package com.github.pizzaeueu.domain.llm
+package com.github.pizzaeueu.domain
 
 enum LLMResponse {
   case Success(text: String)

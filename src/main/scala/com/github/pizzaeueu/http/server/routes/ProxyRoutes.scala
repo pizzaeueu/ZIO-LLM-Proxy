@@ -1,12 +1,9 @@
 package com.github.pizzaeueu.http.server.routes
 
-import com.github.pizzaeueu.domain
 import com.github.pizzaeueu.domain.*
-import com.github.pizzaeueu.domain.RequestState.*
-import com.github.pizzaeueu.domain.llm.{Dialogue, LLMResponse}
+import com.github.pizzaeueu.domain.RequestState.InProgress
 import com.github.pizzaeueu.http.server.HttpServerLive.ApiV1Path
-import com.github.pizzaeueu.repository.ClientStateRepository
-import com.github.pizzaeueu.services.UserRequestService
+import com.github.pizzaeueu.services.{ClientStateRepository, UserRequestService}
 import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.*
@@ -28,9 +25,9 @@ final case class ProxyRoutesLive(
   private given JsonEncoder[LLMResponse] =
     (a: LLMResponse, indent: Option[RuntimeFlags], out: Write) =>
       a match {
-        case domain.llm.LLMResponse.Success(text) =>
+        case LLMResponse.Success(text) =>
           out.write(s"""{"type": "success", "text": "$text" + }""")
-        case domain.llm.LLMResponse.SensitiveDataFound =>
+        case LLMResponse.SensitiveDataFound =>
           out.write(
             s"""{"type": "sensitive-info", "text": "Please approve the request." + }"""
           )

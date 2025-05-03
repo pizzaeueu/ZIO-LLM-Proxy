@@ -1,4 +1,4 @@
-package com.github.pizzaeueu.repository
+package com.github.pizzaeueu.services
 
 import com.github.pizzaeueu.domain.RequestState
 import zio.*

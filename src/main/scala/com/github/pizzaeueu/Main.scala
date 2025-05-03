@@ -1,16 +1,14 @@
 package com.github.pizzaeueu
 
-import com.github.pizzaeueu.config.AppConfig
+import com.github.pizzaeueu.client.{LLMClientLive, ProxyMCPClientLive}
 import com.github.pizzaeueu.http.server.routes.{HealthRoutesLive, ProxyRoutesLive}
 import com.github.pizzaeueu.http.server.{HttpServer, HttpServerLive}
-import com.github.pizzaeueu.llm.{LLMClient, LLMClientLive}
-import com.github.pizzaeueu.mcp.{ProxyMCPClient, ProxyMCPClientLive}
-import com.github.pizzaeueu.pii.PIICheckerLive
-import com.github.pizzaeueu.repository.ClientStateRepositoryLive
-import com.github.pizzaeueu.services.{UserRequestService, UserRequestServiceLive}
+import com.github.pizzaeueu.services.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.http.Server
+import com.github.pizzaeueu.config.AppConfig
+import com.github.pizzaeueu.service.PIICheckerLive
 
 object Main extends ZIOAppDefault {
 

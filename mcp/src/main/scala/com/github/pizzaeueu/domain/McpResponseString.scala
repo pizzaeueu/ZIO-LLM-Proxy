@@ -1,3 +1,3 @@
-package com.github.pizzaeueu.domain.mcp
+package com.github.pizzaeueu.domain
 
 case class McpResponseString(clientId: String, response: String, isSensitive: Boolean)

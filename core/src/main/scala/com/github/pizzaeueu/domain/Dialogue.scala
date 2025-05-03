@@ -1,6 +1,5 @@
-package com.github.pizzaeueu.domain.llm
+package com.github.pizzaeueu.domain
 
-import com.github.pizzaeueu.domain.UserPrompt
 import com.openai.models.chat.completions.{
   ChatCompletionMessageParam,
   ChatCompletionUserMessageParam

@@ -1,6 +1,7 @@
 package com.github.pizzaeueu
 
-import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.github.pizzaeueu.domain.{LLMTool, McpRequest, McpTools}
 import com.openai.core.JsonValue
 import com.openai.models.chat.completions.{
   ChatCompletionMessageToolCall,
@@ -9,9 +10,6 @@ import com.openai.models.chat.completions.{
 import com.openai.models.{FunctionDefinition, FunctionParameters}
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest
 import zio.{Task, ZIO}
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.pizzaeueu.domain.llm.LLMTool
-import com.github.pizzaeueu.domain.mcp.{McpRequest, McpTools}
 
 import scala.jdk.CollectionConverters.*
 

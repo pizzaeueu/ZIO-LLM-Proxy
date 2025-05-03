@@ -1,11 +1,10 @@
-package com.github.pizzaeueu.mcp
+package com.github.pizzaeueu.client
 
 import com.github.pizzaeueu.config.MCPConfig
-import com.github.pizzaeueu.domain.{McpClientNotFound, SeveralMcpClientsFound}
-import com.github.pizzaeueu.domain.mcp.*
-import com.github.pizzaeueu.pii.PIIChecker
-import io.modelcontextprotocol.client.transport.{ServerParameters, StdioClientTransport}
+import com.github.pizzaeueu.domain.*
+import com.github.pizzaeueu.service.PIIChecker
 import io.modelcontextprotocol.client.McpClient
+import io.modelcontextprotocol.client.transport.{ServerParameters, StdioClientTransport}
 import io.modelcontextprotocol.spec.McpSchema
 import zio.*
 

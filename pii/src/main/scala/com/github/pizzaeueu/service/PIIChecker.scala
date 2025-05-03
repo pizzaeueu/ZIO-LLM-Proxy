@@ -1,4 +1,4 @@
-package com.github.pizzaeueu.pii
+package com.github.pizzaeueu.service
 
 import zio.*
 

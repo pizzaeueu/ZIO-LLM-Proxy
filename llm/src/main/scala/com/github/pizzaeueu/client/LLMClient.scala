@@ -1,7 +1,7 @@
-package com.github.pizzaeueu.llm
+package com.github.pizzaeueu.client
 
 import com.github.pizzaeueu.config.OpenAIConfig
-import com.github.pizzaeueu.domain.llm.{Dialogue, LLMTool}
+import com.github.pizzaeueu.domain.{Dialogue, LLMTool}
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.models.chat.completions.*
 import zio.{Task, ZIO, ZLayer}
