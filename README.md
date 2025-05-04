@@ -4,7 +4,7 @@ custom PII checks for sensitive data verification
 
 # Local Run
 _the Default example will work with the [filesystem](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) mcp server and requires it to be pre-installed as docker image. 
-However, one can configure any count of other mcp servers by overriding the `MCP_SERVERS` env vairable_
+However, one can configure any count of other mcp servers by changing `data/McpConfig.conf` file_
 - Set your openAI api key to the docker compose file, `OPEN_AI_API_KEY` variable
 - Set an absolute path to the folder shared with the model to the docker compose file, `SHARED_DIRECTORY_ABSOLUTE_PATH` variable
 - run docker compose up
