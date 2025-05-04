@@ -11,6 +11,7 @@ services:
       SERVER_HOST: localhost
       SERVER_PORT: 8081
       SHARED_DIRECTORY_ABSOLUTE_PATH: {your_path}
+      MCP_SERVERS: "{\"data\": [{\"name\": \"filesystem\", \"command\": \"docker\", \"args\": [\"run\", \"-i\", \"--rm\", \"--mount\", \"type=bind,src=${SHARED_DIRECTORY_ABSOLUTE_PATH},dst=/projects/resources\", \"mcp/filesystem\", \"/projects\"]}]}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:

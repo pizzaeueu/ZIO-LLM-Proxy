@@ -26,7 +26,7 @@ object Main extends ZIOAppDefault {
             LLMClientLive.live,
             ProxyMCPClientLive.live,
             ZLayer.succeed(config.openai),
-            ZLayer.succeed(config.mcp),
+            ZLayer.succeed(config.mcp.data),
             UserRequestServiceLive.live,
             ProxyRoutesLive.live,
             PIICheckerLive.live,

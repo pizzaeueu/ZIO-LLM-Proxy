@@ -6,5 +6,5 @@ import zio.config.magnolia.*
 final case class AppConfig(
     server: HttpServerConfig,
     openai: OpenAIConfig,
-    mcp: List[MCPConfig]
+    mcp: McpData
 ) derives Config
