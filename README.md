@@ -2,6 +2,12 @@
 The proxy enables integration between OpenAI chat models and local MCP servers via [Function Calling](https://platform.openai.com/docs/guides/function-calling), allowing 
 custom PII checks for sensitive data verification
 
+# Local Run
+- Set your openAI api key to the docker compose file, `OPEN_AI_API_KEY` variable
+- Set an absolute path to the folder shared with the model to the docker compose file, `SHARED_DIRECTORY_ABSOLUTE_PATH` variable
+- run docker compose up
+- open http://localhost:4173/ and start chat with the model
+
 # MCP Proxy MVP Specification
 
 ## Requirements

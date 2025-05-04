@@ -3,7 +3,6 @@ package com.github.pizzaeueu.services
 import com.github.pizzaeueu.client.{LLMClient, ProxyMCPClient}
 import com.github.pizzaeueu.config.OpenAIConfig
 import com.github.pizzaeueu.domain.*
-import com.github.pizzaeueu.domain.RequestState.WaitingForApprove
 import com.github.pizzaeueu.domain.LLMResponse.Success
 import com.openai.models.chat.completions.*
 import zio.{Task, ZIO, ZLayer}
@@ -20,7 +19,6 @@ trait UserRequestService {
 final case class UserRequestServiceLive(
     llmClient: LLMClient,
     mcpClient: ProxyMCPClient,
-    stateRepository: ClientStateRepository,
     config: OpenAIConfig
 ) extends UserRequestService:
   override def ask(
@@ -46,10 +44,7 @@ final case class UserRequestServiceLive(
       loadMcpData(modelResponse).flatMap {
         case mcpData
             if mcpData.exists(_.isSensitive) && previousDialogue.secure =>
-          stateRepository.saveState(
-            previousDialogue.id,
-            WaitingForApprove(previousDialogue)
-          ) *> ZIO.succeed(LLMResponse.SensitiveDataFound)
+          ZIO.succeed(LLMResponse.SensitiveDataFound(previousDialogue))
         case mcpData =>
           val toolsCalledByLLM = toolsCalledByLLMUnsafe(modelResponse)
           val fullDialog = previousDialogue.copy(data =
@@ -76,7 +71,19 @@ final case class UserRequestServiceLive(
             res <- askModelUntilItIsReady(llmResponse, fullDialog, tools)
           } yield res
       },
-      getModelResponseAsText(modelResponse).map(Success.apply)
+      getModelResponseAsText(modelResponse).map(response =>
+        Success(
+          response,
+          previousDialogue.copy(data =
+            previousDialogue.data :+ ChatCompletionMessageParam.ofAssistant(
+              ChatCompletionAssistantMessageParam
+                .builder()
+                .content(response)
+                .build()
+            )
+          )
+        )
+      )
     )
   }
 

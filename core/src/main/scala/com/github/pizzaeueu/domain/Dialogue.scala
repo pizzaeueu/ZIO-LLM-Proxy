@@ -24,4 +24,6 @@ object Dialogue {
     ),
     true
   )
+
+  def empty(id: String): Dialogue = Dialogue(id, List(), true)
 }

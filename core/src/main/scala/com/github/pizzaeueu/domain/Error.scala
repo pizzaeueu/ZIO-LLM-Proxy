@@ -9,8 +9,12 @@ case object StateNotFound extends Error {
   override def getMessage: String = "State not found"
 }
 
-case class McpClientNotFound(tool: String) extends Error {
+case class McpClientNotFoundByTool(tool: String) extends Error {
   override def getMessage: String = s"MCP Client for tool $tool not found"
+}
+
+case class McpClientNotFoundById(clientId: String) extends Error {
+  override def getMessage: String = s"MCP Client $clientId not found"
 }
 
 case class SeveralMcpClientsFound(tool: String) extends Error {

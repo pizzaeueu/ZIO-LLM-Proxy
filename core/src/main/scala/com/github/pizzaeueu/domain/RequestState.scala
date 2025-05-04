@@ -1,6 +1,6 @@
 package com.github.pizzaeueu.domain
 
-enum RequestState {
-  case InProgress
-  case WaitingForApprove(dialogue: Dialogue)
+enum RequestState(val dialogue: Dialogue) {
+  case InProgress(d: Dialogue) extends RequestState(d)
+  case WaitingForApprove(d: Dialogue) extends RequestState(d)
 }

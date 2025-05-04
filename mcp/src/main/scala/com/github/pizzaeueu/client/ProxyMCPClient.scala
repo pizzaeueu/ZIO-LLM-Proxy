@@ -32,11 +32,7 @@ final case class ProxyMCPClientLive(
   ): Task[List[McpResponseString]] = {
     ZIO.collectAll(
       mcpRequests.map(request =>
-        runMcpRequest(request).mapError(_ =>
-          new RuntimeException(
-            s"MCP Client for tool ${request.request.name()} is not registered"
-          )
-        )
+        runMcpRequest(request)
       )
     )
   }
@@ -48,7 +44,7 @@ final case class ProxyMCPClientLive(
     )
     res <-
       if (filteredTools.isEmpty) {
-        ZIO.fail(McpClientNotFound(toolName))
+        ZIO.fail(McpClientNotFoundByTool(toolName))
       } else if (filteredTools.size > 1) {
         ZIO.fail(
           SeveralMcpClientsFound(toolName)
@@ -58,9 +54,10 @@ final case class ProxyMCPClientLive(
       }
   } yield res
 
-  private def runMcpRequest(mcpRequest: McpRequest) = for {
+  private def runMcpRequest(mcpRequest: McpRequest): Task[McpResponseString] = for {
     clientId <- findClientIdByTool(mcpRequest.request.name())
-    tool <- ZIO.fromOption(clients.find(_.clientId == clientId))
+    tool <- ZIO.fromOption(clients.find(_.clientId == clientId)).mapError(_ => McpClientNotFoundById(clientId))
+    _ <- ZIO.logInfo(s"Running mcp request: ${mcpRequest.request.name()} for mcp client $clientId")
     mcpResponse <- ZIO.attempt(tool.mcpClient.callTool(mcpRequest.request))
     textResultList <- ZIO.foreach(mcpResponse.content().asScala) {
       case content: McpSchema.TextContent =>
