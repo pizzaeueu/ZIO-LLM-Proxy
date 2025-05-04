@@ -15,11 +15,7 @@ final case class McpData(data: List[MCPConfig])
 object McpData {
   given mcpDataConfig: Config[McpData] =
     Config.string.mapOrFail { jsonString =>
-      val cleanJson = jsonString.trim
-        .stripPrefix("\"")
-        .stripSuffix("\"")
-        .replaceAll("\\\\\"", "\"")
-      cleanJson
+      jsonString
         .fromJson[McpData]
         .left
         .map[Config.Error](error =>
