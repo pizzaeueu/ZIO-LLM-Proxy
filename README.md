@@ -12,12 +12,11 @@ However, one can configure any count of other mcp servers by changing `data/McpC
 
 # MCP Proxy MVP Specification
 
-## Requirements
-- Add the ability to make MCP calls for OpenAI models
+- Provide the ability to make MCP calls for OpenAI models
 - Run PII checks for the data provided to LLM
 - Ask the user for access to share sensitive information with LLM
-- No authentication mechanism is required
-- No metrics are required
+- No authentication mechanism
+- No metrics
 - No strict SLA's
 
 **Prerequisites**
@@ -79,15 +78,6 @@ sequenceDiagram
     User ->> Proxy: Do not give access
     Proxy ->> User: Send acknowledge 
 ```
-## Implementation Details
-The project will be built using Scala + ZIO stack
-
-### Error Handling
-* Return 400 HTTP code in the case of an invalid user's input
-* Return 413 HTTP code if the data retrieved from the MCP servers is more than the context window
-* Return 502 HTTP code in case the MCP or LLM servers have not responded
-* Return 500 HTTP  code to a user in the case of any other error
-* Log to the console for investigation purposes
 
 ### MCP injection
 * Data about available MCP servers will be provided to model using [Function Calling](https://platform.openai.com/docs/guides/function-calling)
