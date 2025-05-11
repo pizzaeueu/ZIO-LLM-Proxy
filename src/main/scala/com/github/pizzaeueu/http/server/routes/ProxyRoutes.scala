@@ -139,7 +139,7 @@ final case class ProxyRoutesLive(
                   } yield ()
               }
             } yield ()).catchAll(err =>
-              ZIO.logError(err.getMessage) *> channel.send(
+              ZIO.logError(err.getMessage) *> ZIO.logError(err.getStackTrace.mkString("\n")) *> channel.send(
                 Read(WebSocketFrame.Text(err.toJson))
               )
             )

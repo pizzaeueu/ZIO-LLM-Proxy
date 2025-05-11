@@ -55,24 +55,38 @@ final case class ProxyMCPClientLive(
       }
   } yield res
 
-  private def runMcpRequest(mcpRequest: McpRequest): Task[McpResponseString] = for {
-    clientId <- findClientIdByTool(mcpRequest.request.name())
-    tool <- ZIO.fromOption(clients.find(_.clientId == clientId)).mapError(_ => McpClientNotFoundById(clientId))
-    _ <- ZIO.logInfo(s"Running mcp request: ${mcpRequest.request.name()} for mcp client $clientId")
-    mcpResponse <- ZIO.attempt(tool.mcpClient.callTool(mcpRequest.request))
-    textResultList <- ZIO.foreach(mcpResponse.content().asScala) {
-      case content: McpSchema.TextContent =>
-        ZIO.succeed(content.text())
-      case content =>
-        ZIO
-          .logError(
-            s"Unsupported MCP content type - id: $clientId, content: ${content.`type`()}"
-          )
-          .as("")
-    }
-    textResult = textResultList.mkString("\n")
-    isSensitive <- piiChecker.containsSensitiveData(textResult)
-  } yield McpResponseString(clientId, textResult, isSensitive)
+  private def runMcpRequest(mcpRequest: McpRequest): Task[McpResponseString] =
+    for {
+      clientId <- findClientIdByTool(mcpRequest.request.name())
+      tool <- ZIO
+        .fromOption(clients.find(_.clientId == clientId))
+        .mapError(_ => McpClientNotFoundById(clientId))
+      _ <- ZIO.logInfo(
+        s"Running mcp request: ${mcpRequest.request.name()} for mcp client $clientId"
+      )
+      mcpResponse <- ZIO.attempt(tool.mcpClient.callTool(mcpRequest.request))
+      _ <- ZIO.logInfo(
+        s"mcp response: ${mcpResponse.content()} for mcp client $clientId"
+      )
+      textResultList <- ZIO.foreach(mcpResponse.content().asScala) {
+        case content: McpSchema.TextContent if !mcpResponse.isError =>
+          ZIO.succeed(content.text())
+        case content if mcpResponse.isError =>
+          ZIO
+            .logError(
+              s"Error during fetching mcp data - $content"
+            )
+            .as("")
+        case content =>
+          ZIO
+            .logError(
+              s"Unsupported MCP content type - id: $clientId, content: ${content.`type`()}"
+            )
+            .as("")
+      }
+      textResult = textResultList.mkString("\n")
+      isSensitive <- piiChecker.containsSensitiveData(textResult)
+    } yield McpResponseString(clientId, textResult, isSensitive)
 
 object ProxyMCPClientLive {
   def live: ZLayer[List[MCPConfig] & PIIChecker, Nothing, ProxyMCPClient] =
