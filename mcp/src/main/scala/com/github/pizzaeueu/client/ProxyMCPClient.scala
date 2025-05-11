@@ -4,7 +4,10 @@ import com.github.pizzaeueu.config.MCPConfig
 import com.github.pizzaeueu.domain.*
 import com.github.pizzaeueu.service.PIIChecker
 import io.modelcontextprotocol.client.McpClient
-import io.modelcontextprotocol.client.transport.{ServerParameters, StdioClientTransport}
+import io.modelcontextprotocol.client.transport.{
+  ServerParameters,
+  StdioClientTransport
+}
 import io.modelcontextprotocol.spec.McpSchema
 import zio.*
 
@@ -31,9 +34,7 @@ final case class ProxyMCPClientLive(
       mcpRequests: List[McpRequest]
   ): Task[List[McpResponseString]] = {
     ZIO.collectAll(
-      mcpRequests.map(request =>
-        runMcpRequest(request)
-      )
+      mcpRequests.map(request => runMcpRequest(request))
     )
   }
 
@@ -83,6 +84,7 @@ object ProxyMCPClientLive {
             mcp.name -> ServerParameters
               .builder(mcp.command)
               .args(mcp.args*)
+              .env(mcp.env.asJava)
               .build()
           ) <* ZIO.logInfo(s"new MCP server registered: ${mcp.name}")
         }
